@@ -28,7 +28,7 @@ stages:
               command: build
               containerRegistry: acrappsjosue
               repository: ${{ parameters.imageName }}
-              dockerfile: "**/Dockerfile"
+              dockerfile: "**/dockerfile"
               tags: |
                 $(Build.BuildId)
 
