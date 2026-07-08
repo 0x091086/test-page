@@ -1,39 +1,59 @@
-# Docker
-# Build and push an image to Azure Container Registry
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
 trigger:
-- main
+  - main
 
 resources:
-- repo: self
+  - repo: self
 
 variables:
-  # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: '69dae63c-a2be-42f2-be70-58949ddca642'
-  imageRepository: 'testpage'
-  containerRegistry: 'acrappsjosue.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/dockerfile'
-  tag: '$(Build.BuildId)'
+  - group: CICD
 
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
+parameters:
+  - name: imageName
+    default: "testpage"
 
 stages:
-- stage: Build
-  displayName: Build and push stage
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
+  - stage: CICD
+    displayName: CICD workflow
+
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
           name: local-agent
-    steps:
-    - task: Docker@2
-      displayName: Build and push an image to container registry
-      inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+
+        steps:
+          - task: Docker@2
+            displayName: Build Docker Image
+            inputs:
+              command: build
+              containerRegistry: registryConnection
+              repository: ${{ parameters.imageName }}
+              dockerfile: "**/Dockerfile"
+              tags: |
+                $(Build.BuildId)
+
+          - task: Docker@2
+            displayName: Push Docker Image
+            inputs:
+              command: push
+              containerRegistry: registryConnection
+              repository: ${{ parameters.imageName }}
+              tags: |
+                $(Build.BuildId)
+
+      - job: Deploy
+        displayName: Deploy
+        dependsOn: Build
+        pool:
+          name: local-agent
+
+        steps:
+          - task: AzureContainerApps@1
+            displayName: Deploy Container App
+            inputs:
+              azureSubscription: appDeployConnection
+              imageToDeploy: acrappsjosue.azurecr.io/${{ parameters.imageName }}:$(Build.BuildId)
+              containerAppName: app-testpage
+              resourceGroup: rg-devops
+              acrUsername: $(acrUsername)
+              acrPassword: $(acrPassword)
