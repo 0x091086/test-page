@@ -26,7 +26,7 @@ stages:
             displayName: Build Docker Image
             inputs:
               command: build
-              containerRegistry: registryConnection
+              containerRegistry: acrappsjosue
               repository: ${{ parameters.imageName }}
               dockerfile: "**/Dockerfile"
               tags: |
@@ -36,7 +36,7 @@ stages:
             displayName: Push Docker Image
             inputs:
               command: push
-              containerRegistry: registryConnection
+              containerRegistry: acrappsjosue
               repository: ${{ parameters.imageName }}
               tags: |
                 $(Build.BuildId)
