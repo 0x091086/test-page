@@ -53,7 +53,8 @@ stages:
             inputs:
               azureSubscription: appDeployConnection
               imageToDeploy: acrappsjosue.azurecr.io/${{ parameters.imageName }}:$(Build.BuildId)
-              containerAppName: app-testpage
+              containerAppName: app-test-page
               resourceGroup: rg-devops
+              targetPort: 80
               acrUsername: $(acrUsername)
               acrPassword: $(acrPassword)
